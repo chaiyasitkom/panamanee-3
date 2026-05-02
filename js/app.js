@@ -677,35 +677,62 @@ async function loadUsers() {
     tbody.innerHTML = usersSnap.docs.map(d => {
       const u = { id: d.id, ...d.data() };
       const username = emailToUsername[u.email] || '-';
+      const pwd = (u.password || '').replace(/'/g, '&#39;');
       return `<tr>
         <td>${u.displayName || '-'}</td>
         <td><code class="small text-primary">${username}</code></td>
         <td class="text-muted small">${u.email || '-'}</td>
+        <td>
+          <span class="text-muted small" id="pwd-mask-${u.id}">••••••</span>
+          <button class="btn btn-link btn-sm p-0 ms-1" style="font-size:.75rem"
+            onclick="togglePwd('${u.id}','${pwd}')">
+            <i class="bi bi-eye" id="pwd-icon-${u.id}"></i>
+          </button>
+        </td>
         <td><span class="badge bg-secondary">${u.role || '-'}</span></td>
         <td>${u.disabled ? '<span class="badge bg-danger">ระงับ</span>' : '<span class="badge bg-success">ปกติ</span>'}</td>
         <td>
-          <button class="btn btn-xs btn-sm btn-outline-primary py-0" onclick="editUser('${u.id}','${u.displayName||''}','${u.role}',${!!u.disabled})">
+          <button class="btn btn-xs btn-sm btn-outline-primary py-0" onclick="editUser('${u.id}')">
             <i class="bi bi-pencil"></i>
           </button>
         </td>
       </tr>`;
-    }).join('') || '<tr><td colspan="6" class="text-center text-muted">ไม่พบผู้ใช้งาน</td></tr>';
+    }).join('') || '<tr><td colspan="7" class="text-center text-muted">ไม่พบผู้ใช้งาน</td></tr>';
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-danger">${e.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-danger">${e.message}</td></tr>`;
   }
 }
 
-function editUser(uid, name, role, disabled) {
+function togglePwd(uid, pwd) {
+  const span = document.getElementById('pwd-mask-' + uid);
+  const icon = document.getElementById('pwd-icon-' + uid);
+  const hidden = span.textContent === '••••••';
+  span.textContent = hidden ? (pwd || '-') : '••••••';
+  icon.className = hidden ? 'bi bi-eye-slash' : 'bi bi-eye';
+}
+
+async function editUser(uid) {
   document.getElementById('mu-uid').value = uid;
   document.getElementById('modal-user-title').textContent = 'แก้ไขผู้ใช้';
-  document.getElementById('mu-name').value = name;
-  document.getElementById('mu-role').value = role;
+  document.getElementById('mu-name').value = '';
+  document.getElementById('mu-role').value = 'ผู้แจ้ง';
+  document.getElementById('mu-password').value = '';
   document.getElementById('mu-username-wrap').classList.add('d-none');
   document.getElementById('mu-email-wrap').classList.add('d-none');
-  document.getElementById('mu-pwd-wrap').classList.add('d-none');
+  document.getElementById('mu-pwd-wrap').classList.remove('d-none');
   document.getElementById('mu-line-server-note').classList.add('d-none');
   document.getElementById('mu-disable-wrap').classList.remove('d-none');
-  document.getElementById('mu-disabled').checked = disabled;
+  document.getElementById('mu-error').classList.add('d-none');
+
+  try {
+    const doc = await db.collection('users').doc(uid).get();
+    const data = doc.data() || {};
+    document.getElementById('mu-name').value = data.displayName || '';
+    document.getElementById('mu-role').value = data.role || 'ผู้แจ้ง';
+    document.getElementById('mu-password').value = data.password || '';
+    document.getElementById('mu-disabled').checked = !!data.disabled;
+  } catch (e) { /* ใช้ค่าว่าง */ }
+
   new bootstrap.Modal(document.getElementById('modal-user')).show();
 }
 
@@ -744,7 +771,30 @@ async function saveUser() {
 
   try {
     if (uid) {
+      const newPassword = document.getElementById('mu-password').value;
       const updateData = { displayName: name, role, disabled: document.getElementById('mu-disabled').checked };
+
+      if (newPassword) {
+        if (newPassword.length < 6) {
+          errEl.textContent = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
+          errEl.classList.remove('d-none');
+          return;
+        }
+        // เปลี่ยนรหัสผ่านผ่าน secondary app
+        const userDoc = await db.collection('users').doc(uid).get();
+        const { email, password: oldPwd } = userDoc.data();
+        const secondaryApp = firebase.initializeApp(firebase.app().options, 'secondary-' + Date.now());
+        try {
+          const sec = secondaryApp.auth();
+          await sec.signInWithEmailAndPassword(email, oldPwd);
+          await sec.currentUser.updatePassword(newPassword);
+          await sec.signOut();
+        } finally {
+          await secondaryApp.delete();
+        }
+        updateData.password = newPassword;
+      }
+
       await db.collection('users').doc(uid).update(updateData);
       bootstrap.Modal.getInstance(document.getElementById('modal-user')).hide();
       showToast('อัปเดตผู้ใช้เรียบร้อยแล้ว', 'success');
@@ -786,6 +836,7 @@ async function saveUser() {
           displayName: name,
           role,
           disabled: false,
+          password,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         batch.set(db.collection('usernames').doc(username), { email, uid: newUid });
