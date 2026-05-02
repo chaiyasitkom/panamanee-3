@@ -772,14 +772,27 @@ async function saveUser() {
         return;
       }
 
-      const token = await auth.currentUser.getIdToken();
-      const resp = await fetch(`${LINE_SERVER}/api/admin/create-user`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ username, email, password, displayName: name, role })
-      });
-      const data = await resp.json();
-      if (!data.ok) throw new Error(data.error || 'สร้าง User ไม่สำเร็จ');
+      // สร้าง Firebase Auth user ผ่าน secondary app เพื่อไม่ให้ logout admin
+      const secondaryApp = firebase.initializeApp(firebase.app().options, 'secondary-' + Date.now());
+      try {
+        const secondaryAuth = secondaryApp.auth();
+        const cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+        const newUid = cred.user.uid;
+        await secondaryAuth.signOut();
+
+        const batch = db.batch();
+        batch.set(db.collection('users').doc(newUid), {
+          email,
+          displayName: name,
+          role,
+          disabled: false,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        batch.set(db.collection('usernames').doc(username), { email, uid: newUid });
+        await batch.commit();
+      } finally {
+        await secondaryApp.delete();
+      }
 
       bootstrap.Modal.getInstance(document.getElementById('modal-user')).hide();
       showToast(`สร้างผู้ใช้ ${name} (${username}) เรียบร้อยแล้ว`, 'success');
