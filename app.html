@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบแจ้งซ่อมเครื่องจักร V11</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div class="brand">
+    <div class="d-flex align-items-center gap-2">
+      <div style="background:linear-gradient(135deg,#3b82f6,#6366f1);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="bi bi-tools text-white" style="font-size:.9rem"></i>
+      </div>
+      <div>
+        <div class="text-white fw-semibold" style="font-size:.9rem;line-height:1.2">แจ้งซ่อมเครื่องจักร</div>
+        <div style="font-size:.7rem;color:rgba(255,255,255,.4)">V11</div>
+      </div>
+    </div>
+  </div>
+  <div class="mt-2" id="sidebar-menu"></div>
+  <div style="position:absolute;bottom:1rem;left:0;right:0;padding:0 8px">
+    <div id="sidebar-user" class="d-flex align-items-center gap-2 p-2" style="border-radius:8px;background:rgba(255,255,255,.07)">
+      <div style="width:32px;height:32px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="bi bi-person-fill text-white" style="font-size:.9rem"></i>
+      </div>
+      <div style="min-width:0">
+        <div id="user-name" class="text-white" style="font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">-</div>
+        <div id="user-role" style="font-size:.68rem;color:rgba(255,255,255,.45)">-</div>
+      </div>
+    </div>
+    <button class="btn btn-sm w-100 mt-2" onclick="doLogout()" style="color:rgba(255,255,255,.5);background:transparent;border:1px solid rgba(255,255,255,.1);font-size:.8rem">
+      <i class="bi bi-box-arrow-left me-1"></i>ออกจากระบบ
+    </button>
+  </div>
+</nav>
+
+<!-- Main -->
+<div id="main-content">
+  <!-- Topbar -->
+  <div id="topbar" class="d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-sm btn-outline-secondary d-md-none" onclick="toggleSidebar()">
+        <i class="bi bi-list"></i>
+      </button>
+      <h6 class="mb-0 fw-semibold" id="topbar-title">Dashboard</h6>
+    </div>
+    <div class="d-flex gap-2" id="topbar-actions"></div>
+  </div>
+
+  <!-- Page Content -->
+  <div class="page-content">
+
+    <!-- ===== VIEW: DASHBOARD ===== -->
+    <section id="view-dashboard" class="view">
+      <div class="row g-3 mb-4" id="stat-cards">
+        <div class="col-6 col-md-3">
+          <div class="card stat-card warning-card p-3">
+            <div class="stat-number text-warning" id="stat-pending">-</div>
+            <div class="stat-label">รอดำเนินการ</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card stat-card primary-card p-3">
+            <div class="stat-number text-primary" id="stat-inprogress">-</div>
+            <div class="stat-label">กำลังซ่อม</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card stat-card orange-card p-3">
+            <div class="stat-number" style="color:#f97316" id="stat-waiting">-</div>
+            <div class="stat-label">รอชิ้นส่วน</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card stat-card success-card p-3">
+            <div class="stat-number text-success" id="stat-done">-</div>
+            <div class="stat-label">เสร็จสิ้นเดือนนี้</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="card mb-3">
+        <div class="card-body py-2">
+          <div class="row g-2 align-items-center">
+            <div class="col-6 col-md-2">
+              <select class="form-select form-select-sm" id="f-project">
+                <option value="">ทุกโครงการ</option>
+                <option>สุวรรณภูมิ</option>
+                <option>นวนคร DC6</option>
+                <option>สุขวิท</option>
+              </select>
+            </div>
+            <div class="col-6 col-md-2">
+              <select class="form-select form-select-sm" id="f-status">
+                <option value="">ทุกสถานะ</option>
+                <option>รอดำเนินการ</option>
+                <option>กำลังตรวจสอบ</option>
+                <option>กำลังซ่อม</option>
+                <option>รอชิ้นส่วน</option>
+                <option>เสร็จสิ้น</option>
+                <option>ยกเลิก</option>
+              </select>
+            </div>
+            <div class="col-6 col-md-2">
+              <select class="form-select form-select-sm" id="f-urgency">
+                <option value="">ทุกระดับ</option>
+                <option>ด่วนมาก</option>
+                <option>ด่วน</option>
+                <option>ปกติ</option>
+              </select>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" id="f-search" placeholder="ค้นหาเครื่อง, เลขที่...">
+              </div>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+              <button class="btn btn-sm btn-primary" onclick="applyFilters()">
+                <i class="bi bi-funnel me-1"></i>กรอง
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">ล้าง</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between py-2">
+          <span id="repairs-count" class="text-muted small">กำลังโหลด...</span>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-success" onclick="exportExcel()" title="Export Excel">
+              <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+            </button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>เลขที่</th>
+                <th>เครื่องจักร</th>
+                <th>โครงการ</th>
+                <th>อาการ</th>
+                <th>ระดับ</th>
+                <th>สถานะ</th>
+                <th>ผู้แจ้ง</th>
+                <th>วันที่แจ้ง</th>
+                <th>ช่างรับผิดชอบ</th>
+              </tr>
+            </thead>
+            <tbody id="repairs-table-body">
+              <tr><td colspan="9" class="text-center py-4 text-muted">
+                <span class="spinner-border spinner-border-sm me-2"></span>กำลังโหลดข้อมูล...
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: NEW REPAIR ===== -->
+    <section id="view-new-repair" class="view d-none">
+      <div class="card" style="max-width:720px">
+        <div class="card-header">
+          <i class="bi bi-plus-circle me-2 text-primary"></i>แจ้งซ่อมเครื่องจักรใหม่
+        </div>
+        <div class="card-body">
+          <form id="new-repair-form">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-medium">ชื่อเครื่องจักร <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="nr-machine" required placeholder="เช่น เครื่องตัดหญ้า HONDA GX35">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-medium">โครงการ <span class="text-danger">*</span></label>
+                <select class="form-select" id="nr-project" required>
+                  <option value="">— เลือกโครงการ —</option>
+                  <option>สุวรรณภูมิ</option>
+                  <option>นวนคร DC6</option>
+                  <option>สุขวิท</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-medium">สถานที่/Zone</label>
+                <input type="text" class="form-control" id="nr-location" placeholder="เช่น Zone A, อาคาร 3">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-medium">ระดับความเร่งด่วน <span class="text-danger">*</span></label>
+                <div class="d-flex gap-3 mt-1">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="urgency" id="urg-normal" value="ปกติ" checked>
+                    <label class="form-check-label text-success fw-medium" for="urg-normal">ปกติ</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="urgency" id="urg-high" value="ด่วน">
+                    <label class="form-check-label fw-medium" style="color:#d97706" for="urg-high">ด่วน</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="urgency" id="urg-critical" value="ด่วนมาก">
+                    <label class="form-check-label text-danger fw-medium" for="urg-critical">ด่วนมาก</label>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-medium">อาการ / ปัญหาที่พบ <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="nr-symptoms" rows="3" required placeholder="อธิบายอาการเสียหรือปัญหาที่พบ..."></textarea>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-medium">รูปภาพประกอบ</label>
+                <input type="file" class="form-control" id="nr-images" accept="image/*" multiple>
+                <small class="text-muted">อัปโหลดได้สูงสุด 5 รูป</small>
+                <div id="nr-preview" class="img-preview-wrap mt-2"></div>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-medium">หมายเหตุเพิ่มเติม</label>
+                <textarea class="form-control" id="nr-note" rows="2" placeholder="หมายเหตุ (ถ้ามี)"></textarea>
+              </div>
+            </div>
+            <hr>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary" id="btn-submit-repair">
+                <i class="bi bi-send me-1"></i>ส่งใบแจ้งซ่อม
+              </button>
+              <button type="button" class="btn btn-outline-secondary" onclick="navigate('dashboard')">ยกเลิก</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: DETAIL ===== -->
+    <section id="view-detail" class="view d-none">
+      <div id="detail-content">
+        <div class="text-center py-5 text-muted">
+          <span class="spinner-border"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: ADMIN ===== -->
+    <section id="view-admin" class="view d-none">
+      <ul class="nav nav-tabs mb-3" id="admin-tabs">
+        <li class="nav-item">
+          <a class="nav-link active" href="#" data-tab="users" onclick="switchAdminTab('users',this);return false;">
+            <i class="bi bi-people me-1"></i>ผู้ใช้งาน
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" data-tab="line" onclick="switchAdminTab('line',this);return false;">
+            <i class="bi bi-chat-dots me-1"></i>LINE Groups
+          </a>
+        </li>
+      </ul>
+
+      <!-- Users Tab -->
+      <div id="tab-content-users">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="mb-0">รายชื่อผู้ใช้งาน</h6>
+          <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modal-user">
+            <i class="bi bi-person-plus me-1"></i>เพิ่มผู้ใช้
+          </button>
+        </div>
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>ชื่อ-นามสกุล</th>
+                  <th>Username</th>
+                  <th>อีเมล</th>
+                  <th>บทบาท</th>
+                  <th>สถานะ</th>
+                  <th>จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body">
+                <tr><td colspan="5" class="text-center py-3 text-muted">กำลังโหลด...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- LINE Tab -->
+      <div id="tab-content-line" class="d-none">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="mb-0">กลุ่ม LINE</h6>
+          <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modal-line">
+            <i class="bi bi-plus-circle me-1"></i>เพิ่มกลุ่ม
+          </button>
+        </div>
+        <div class="card mb-3">
+          <div class="card-body">
+            <small class="text-muted">
+              <i class="bi bi-info-circle me-1 text-info"></i>
+              วิธีเพิ่มกลุ่ม: เชิญ LINE Bot เข้ากลุ่ม → Bot จะแสดง Group ID ใน log → นำมากรอกที่นี่
+            </small>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>ป้ายชื่อ</th>
+                  <th>โครงการ</th>
+                  <th>Group ID</th>
+                  <th>สถานะ</th>
+                  <th>จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="line-table-body">
+                <tr><td colspan="5" class="text-center py-3 text-muted">กำลังโหลด...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: REPORTS ===== -->
+    <section id="view-reports" class="view d-none">
+      <div class="card mb-3">
+        <div class="card-body py-2">
+          <div class="row g-2 align-items-center">
+            <div class="col-md-3">
+              <label class="form-label small mb-1">จากวันที่</label>
+              <input type="date" class="form-control form-control-sm" id="rpt-from">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small mb-1">ถึงวันที่</label>
+              <input type="date" class="form-control form-control-sm" id="rpt-to">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small mb-1">โครงการ</label>
+              <select class="form-select form-select-sm" id="rpt-project">
+                <option value="">ทุกโครงการ</option>
+                <option>สุวรรณภูมิ</option>
+                <option>นวนคร DC6</option>
+                <option>สุขวิท</option>
+              </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button class="btn btn-sm btn-primary w-100" onclick="loadReports()">
+                <i class="bi bi-bar-chart me-1"></i>แสดงรายงาน
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-4" id="rpt-stats"></div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header py-2 small">สถานะงานซ่อม</div>
+            <div class="card-body"><canvas id="chart-status" height="200"></canvas></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header py-2 small">งานซ่อมตามโครงการ</div>
+            <div class="card-body"><canvas id="chart-project" height="200"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+          <span class="small fw-semibold">รายการงานซ่อมทั้งหมด</span>
+          <button class="btn btn-sm btn-success" onclick="exportExcel()">
+            <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>เลขที่</th>
+                <th>เครื่องจักร</th>
+                <th>โครงการ</th>
+                <th>ระดับ</th>
+                <th>สถานะ</th>
+                <th>ผู้แจ้ง</th>
+                <th>วันที่แจ้ง</th>
+                <th>เสร็จสิ้น</th>
+              </tr>
+            </thead>
+            <tbody id="rpt-table-body">
+              <tr><td colspan="8" class="text-center py-3 text-muted">กดแสดงรายงานเพื่อโหลดข้อมูล</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /page-content -->
+</div><!-- /main-content -->
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- ===== MODAL: USER ===== -->
+<div class="modal fade" id="modal-user" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title" id="modal-user-title">เพิ่มผู้ใช้งาน</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="mu-uid">
+        <div class="mb-3">
+          <label class="form-label">ชื่อ-นามสกุล <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="mu-name" required>
+        </div>
+        <div class="mb-3" id="mu-username-wrap">
+          <label class="form-label">ชื่อผู้ใช้ (username) <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="mu-username" placeholder="ตัวอักษรพิมพ์เล็ก ไม่มีช่องว่าง">
+          <small class="text-muted">ใช้สำหรับล็อกอิน</small>
+        </div>
+        <div class="mb-3" id="mu-email-wrap">
+          <label class="form-label">อีเมล <span class="text-danger">*</span></label>
+          <input type="email" class="form-control" id="mu-email">
+          <small class="text-muted">ใช้ภายใน Firebase Auth (ผู้ใช้ไม่จำเป็นต้องทราบ)</small>
+        </div>
+        <div class="mb-3" id="mu-pwd-wrap">
+          <label class="form-label">รหัสผ่าน <span class="text-danger">*</span></label>
+          <input type="password" class="form-control" id="mu-password" placeholder="อย่างน้อย 6 ตัวอักษร">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">บทบาท <span class="text-danger">*</span></label>
+          <select class="form-select" id="mu-role">
+            <option value="ผู้แจ้ง">ผู้แจ้ง</option>
+            <option value="ช่าง">ช่าง</option>
+            <option value="ช่างซ่อม">ช่างซ่อม</option>
+            <option value="ผู้บริหาร">ผู้บริหาร</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div id="mu-disable-wrap" class="d-none">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="mu-disabled">
+            <label class="form-check-label text-danger" for="mu-disabled">ระงับการใช้งาน</label>
+          </div>
+        </div>
+        <div id="mu-error" class="alert alert-danger d-none mt-2"></div>
+        <div class="alert alert-info small mt-2" id="mu-line-server-note">
+          <i class="bi bi-info-circle me-1"></i>การสร้าง User ใหม่ต้องรัน LINE Server ก่อน
+          (<code>run.bat</code> → <code>http://localhost:5001</code>)
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button class="btn btn-primary" id="btn-save-user" onclick="saveUser()">บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: LINE GROUP ===== -->
+<div class="modal fade" id="modal-line" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title">เพิ่ม/แก้ไข กลุ่ม LINE</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="ml-doc-id">
+        <div class="mb-3">
+          <label class="form-label">ป้ายชื่อกลุ่ม <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="ml-label" placeholder="เช่น กลุ่มช่างสุวรรณภูมิ">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">โครงการ <span class="text-danger">*</span></label>
+          <select class="form-select" id="ml-project">
+            <option value="">— เลือกโครงการ —</option>
+            <option>สุวรรณภูมิ</option>
+            <option>นวนคร DC6</option>
+            <option>สุขวิท</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Group ID <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="ml-group-id" placeholder="C1234567890abcdef...">
+          <small class="text-muted">ดูได้จาก line_server.log เมื่อ Bot เข้าร่วมกลุ่ม</small>
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="ml-active" checked>
+          <label class="form-check-label" for="ml-active">เปิดใช้งาน</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button class="btn btn-success" onclick="saveLineGroup()">บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: ASSIGN ===== -->
+<div class="modal fade" id="modal-assign" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title">มอบหมายช่าง</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="assign-repair-id">
+        <label class="form-label">เลือกช่าง</label>
+        <select class="form-select" id="assign-tech-select">
+          <option value="">— ไม่มอบหมาย —</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="confirmAssign()">บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: IMAGE VIEWER ===== -->
+<div class="modal fade" id="modal-image" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content bg-dark border-0">
+      <div class="modal-body p-2 text-center">
+        <img id="modal-image-src" src="" style="max-width:100%;max-height:80vh;border-radius:8px">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="js/firebase-init.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

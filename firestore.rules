@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isAuth() && role() == 'admin';
+    }
+
+    function isStaff() {
+      return isAuth() && role() in ['admin', 'ช่าง', 'ช่างซ่อม', 'ผู้บริหาร'];
+    }
+
+    // ─── Users ───
+    match /users/{uid} {
+      allow read: if isAuth() && (request.auth.uid == uid || isAdmin() || isStaff());
+      allow create: if isAdmin();
+      allow update: if isAdmin() || request.auth.uid == uid;
+      allow delete: if isAdmin();
+    }
+
+    // ─── Repairs ───
+    match /repairs/{repairId} {
+      allow read: if isAuth() && (isStaff() || resource.data.reporterUid == request.auth.uid);
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+        isAdmin() ||
+        isStaff() ||
+        resource.data.reporterUid == request.auth.uid
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ─── Repair Logs ───
+    match /repair_logs/{logId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && isStaff();
+      allow update, delete: if isAdmin();
+    }
+
+    // ─── Counters ───
+    match /counters/{docId} {
+      allow read, write: if isAuth();
+    }
+
+    // ─── LINE Groups ───
+    match /line_groups/{docId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // ─── Usernames (public read — ใช้ lookup email ก่อน login) ───
+    match /usernames/{username} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

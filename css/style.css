@@ -1,0 +1,201 @@
+:root {
+  --sidebar-width: 220px;
+}
+
+body {
+  font-family: 'Sarabun', 'Segoe UI', sans-serif;
+  background: #f0f2f5;
+}
+
+/* ===== LAYOUT ===== */
+#sidebar {
+  width: var(--sidebar-width);
+  min-height: 100vh;
+  background: #1a1f36;
+  position: fixed;
+  top: 0; left: 0;
+  z-index: 1000;
+  transition: transform .25s;
+}
+#sidebar .brand {
+  padding: 1.2rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+#sidebar .nav-link {
+  color: rgba(255,255,255,.7);
+  padding: .55rem 1rem;
+  border-radius: 6px;
+  margin: 2px 8px;
+  transition: all .15s;
+  font-size: .9rem;
+}
+#sidebar .nav-link:hover,
+#sidebar .nav-link.active {
+  color: #fff;
+  background: rgba(255,255,255,.12);
+}
+#sidebar .nav-link i {
+  width: 20px;
+  text-align: center;
+  margin-right: 6px;
+}
+#sidebar .role-badge {
+  display: block;
+  font-size: .7rem;
+  color: rgba(255,255,255,.45);
+  padding: .1rem 1rem .5rem;
+}
+
+#main-content {
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+}
+#topbar {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: .6rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+}
+
+@media (max-width: 768px) {
+  #sidebar { transform: translateX(-100%); }
+  #sidebar.show { transform: translateX(0); }
+  #main-content { margin-left: 0; }
+}
+
+/* ===== STAT CARDS ===== */
+.stat-card {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  transition: transform .15s;
+}
+.stat-card:hover { transform: translateY(-2px); }
+.stat-card .stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.stat-card .stat-label {
+  font-size: .8rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+.stat-card.warning-card { border-left: 4px solid #f59e0b; }
+.stat-card.primary-card { border-left: 4px solid #3b82f6; }
+.stat-card.orange-card  { border-left: 4px solid #f97316; }
+.stat-card.success-card { border-left: 4px solid #10b981; }
+
+/* ===== TABLES ===== */
+.table-hover tbody tr { cursor: pointer; }
+.table th { font-weight: 600; font-size: .82rem; color: #6b7280; white-space: nowrap; }
+.table td { vertical-align: middle; font-size: .88rem; }
+
+/* ===== BADGES ===== */
+.badge-urgency-high   { background: #fee2e2; color: #dc2626; }
+.badge-urgency-medium { background: #fef3c7; color: #d97706; }
+.badge-urgency-low    { background: #d1fae5; color: #059669; }
+
+.status-badge {
+  font-size: .75rem;
+  padding: .25em .6em;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status-รอดำเนินการ   { background:#fef3c7; color:#92400e; }
+.status-กำลังตรวจสอบ  { background:#dbeafe; color:#1e40af; }
+.status-กำลังซ่อม     { background:#e0f2fe; color:#0369a1; }
+.status-รอชิ้นส่วน    { background:#ffedd5; color:#c2410c; }
+.status-เสร็จสิ้น     { background:#d1fae5; color:#065f46; }
+.status-ยกเลิก        { background:#f3f4f6; color:#6b7280; }
+
+/* ===== TIMELINE ===== */
+.timeline { position: relative; padding-left: 2rem; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: .75rem;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: #e5e7eb;
+}
+.timeline-item { position: relative; margin-bottom: 1.2rem; }
+.timeline-dot {
+  position: absolute;
+  left: -1.6rem;
+  top: .3rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+.timeline-dot.done { background: #10b981; box-shadow: 0 0 0 2px #10b981; }
+.timeline-dot.warn { background: #f59e0b; box-shadow: 0 0 0 2px #f59e0b; }
+.timeline-time { font-size: .75rem; color: #9ca3af; }
+.timeline-text { font-size: .87rem; }
+
+/* ===== CARDS ===== */
+.card {
+  border: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,.07);
+  border-radius: 10px;
+}
+.card-header {
+  background: #fff;
+  border-bottom: 1px solid #f3f4f6;
+  border-radius: 10px 10px 0 0 !important;
+  font-weight: 600;
+}
+
+/* ===== IMAGES PREVIEW ===== */
+.img-preview-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.img-preview-wrap img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+/* ===== MATERIAL ROW ===== */
+.material-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.material-row .btn-remove { flex-shrink: 0; }
+
+/* ===== MISC ===== */
+.page-content { padding: 1.5rem; }
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.spinner-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+#toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  min-width: 260px;
+}
+.urgency-ด่วนมาก { color: #dc2626; font-weight: 600; }
+.urgency-ด่วน    { color: #d97706; font-weight: 600; }
+.urgency-ปกติ    { color: #059669; }
